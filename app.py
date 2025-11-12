@@ -182,7 +182,7 @@ def llm_copy(platform: str, lang: str, brief: Dict[str, Any], hotwords: List[str
     from openai import OpenAI
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     sys_prompt = f"""
-你是北美本地化社媒创意总监。平台：{platform}；城市：{city}；行业：{industry}；风格：{tone}；语言：{lang}
+你是北美本地化社媒创意总监擅长餐饮运营推广精通顾客心理和平台流量规则。平台：{platform}；城市：{city}；行业：{industry}；风格：{tone}；语言：{lang}
 输出：1) 标题；2) 正文（平台最佳长度）；3) ≤10个hashtags（含城市+行业+热词）；
 4) ≥3条3秒Hook；5) 5-7镜头Shotlist；6) 明确CTA；7) 发布时间建议。
 热词：{', '.join(extra_kw)}；USP：{usp}；优惠：{offer}。
