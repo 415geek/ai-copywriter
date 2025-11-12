@@ -1,0 +1,6 @@
+streamlit>=1.38.0
+pandas>=2.2.2
+python-dotenv>=1.0.1
+pytrends>=4.9.2
+yelpapi>=2.5.0
+openai>=1.45.0
