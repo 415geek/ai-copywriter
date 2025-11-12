@@ -1,10 +1,11 @@
-# app.py — AI 文案生成（小红书为主，多平台协同）— 批量版
+# app.py — AI 文案生成（小红书为主，多平台协同）— 批量 & 排期（移动端优化 + Seattle + 署名）
 # 运行：
 #   pip install -r requirements.txt
 #   streamlit run app.py
-# 提示：
+# 说明：
 #   - 无 OPENAI/YELP Key 也能运行（模板生成 + 离线地域词）
 #   - 有 Key 将自动启用 LLM 与 Yelp 热词增强
+#   - 深色主题在 .streamlit/config.toml 中配置
 
 import os
 import json
@@ -38,6 +39,47 @@ INDUSTRIES = [
 TONES = ["专业可信", "亲切生活化", "潮酷年轻", "高端极简", "幽默风趣"]
 LANG_CHOICES = ["中文", "英文", "中英双语"]
 
+# ========== 页面配置 ==========
+st.set_page_config(page_title="AI 文案生成（批量）", page_icon="🧠", layout="wide")
+
+# === Mobile Optimization：自动展开侧边栏 + 浮动“设置”按钮（手机端更易用） ===
+st.markdown(
+    """
+    <style>
+        /* 让折叠时也保持可见，强制展开侧栏（在移动端更易用） */
+        [data-testid="stSidebar"][aria-expanded="false"] {
+            min-width: 280px;
+            transform: translateX(0);
+        }
+        /* 顶部浮动按钮（手机端显示更明显） */
+        @media (max-width: 768px) {
+            .mobile-nav-button {
+                position: fixed;
+                top: 10px;
+                left: 10px;
+                z-index: 1000;
+                background-color: #7B61FF;
+                color: #FFFFFF;
+                border-radius: 8px;
+                padding: 6px 12px;
+                font-size: 14px;
+                font-weight: 600;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+                user-select: none;
+                -webkit-user-select: none;
+            }
+        }
+    </style>
+    <div class="mobile-nav-button" onclick="document.querySelector('[data-testid=stSidebar]').style.transform='translateX(0)';">
+        ⚙️ 设置
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+st.title("🧠 AI 文案生成（批量 & 排期）")
+st.caption("最少问题 → 地区热词 → 多平台爆款文案（可批量） → 平台模板导出 → 内容排期日历")
+
 # 地域离线洞察（可按需扩充）
 REGION_FACTS = {
     "San Francisco": {
@@ -63,6 +105,15 @@ REGION_FACTS = {
         "food_tags": ["纽约美食", "法拉盛吃喝玩乐"],
         "events": ["NYC Restaurant Week", "NYC Marathon", "Times Square NYE"],
         "posting_hours": {"工作日": ["12:00-14:00","19:00-22:00"], "周末": ["10:30-12:30","20:00-23:00"]}
+    },
+    # === 新增：Seattle ===
+    "Seattle": {
+        "neighborhoods": ["Bellevue", "Downtown", "Capitol Hill", "University District", "Chinatown"],
+        "audience": ["留学生", "科技从业者", "本地家庭", "新移民"],
+        "seasonal": ["樱花季 UW 校园", "夏季户外节", "感恩节火鸡节"],
+        "food_tags": ["西雅图美食", "Bellevue中餐", "UW周边吃喝玩乐"],
+        "events": ["Seattle Restaurant Week", "Bumbershoot Music Festival", "Seattle Film Festival"],
+        "posting_hours": {"工作日": ["11:30-13:30","19:00-21:30"], "周末": ["10:00-12:30","19:00-22:00"]}
     }
 }
 
@@ -182,7 +233,7 @@ def llm_copy(platform: str, lang: str, brief: Dict[str, Any], hotwords: List[str
     from openai import OpenAI
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     sys_prompt = f"""
-你是北美本地化社媒创意总监擅长餐饮运营推广精通顾客心理和平台流量规则。平台：{platform}；城市：{city}；行业：{industry}；风格：{tone}；语言：{lang}
+你是北美本地化社媒创意总监擅长餐饮运营推广精通顾客消费心理和平台流量规则。平台：{platform}；城市：{city}；行业：{industry}；风格：{tone}；语言：{lang}
 输出：1) 标题；2) 正文（平台最佳长度）；3) ≤10个hashtags（含城市+行业+热词）；
 4) ≥3条3秒Hook；5) 5-7镜头Shotlist；6) 明确CTA；7) 发布时间建议。
 热词：{', '.join(extra_kw)}；USP：{usp}；优惠：{offer}。
@@ -233,10 +284,6 @@ def platform_export_row(p: str, r: Dict[str, Any]) -> Dict[str, Any]:
     return {"Text": r["body"]}
 
 # ==== UI ====
-st.set_page_config(page_title="AI 文案生成（批量）", page_icon="🧠", layout="wide")
-st.title("🧠 AI 文案生成 (批量 & 排期)")
-st.caption("最少问题 → 地区热词 → 多平台爆款文案（可批量） → 平台模板导出 → 内容排期日历")
-
 with st.sidebar:
     st.header("1) 基础信息（最少必填）")
     brand    = st.text_input("品牌/门店名", placeholder="如：老李家川菜")
@@ -250,10 +297,10 @@ with st.sidebar:
     targets  = st.multiselect("平台选择", PLATFORMS, default=["小红书","Instagram","TikTok"])
 
     st.header("2) 批量生成")
-    mode      = st.radio("模式", ["单次生成", "批量按天"], horizontal=True)
+    mode       = st.radio("模式", ["单次生成", "批量按天"], horizontal=True)
     start_date = st.date_input("开始日期", value=dt.date.today())
-    days      = st.number_input("天数（批量）", min_value=1, max_value=60, value=30)
-    per_day   = st.number_input("每日条数（每个平台）", min_value=1, max_value=3, value=1)
+    days       = st.number_input("天数（批量）", min_value=1, max_value=60, value=30)
+    per_day    = st.number_input("每日条数（每个平台）", min_value=1, max_value=3, value=1)
 
     submit = st.button("🚀 生成文案 / 批量排期", type="primary", use_container_width=True)
 
@@ -372,13 +419,14 @@ if submit:
     mem_zip.seek(0)
     st.download_button("📦 下载ZIP（全量打包）", mem_zip.read(), file_name=f"{brand}_{city}_content_pack.zip")
 
+# ========== 侧边栏署名（LinkedIn） ==========
 st.sidebar.markdown(
     """
-    <div style='text-align:center;'>
-        👨‍💻 Build by <b>C8Geek</b>  
-        <a href='https://www.linkedin.com/in/lingyu-maxwell-lai' target='_blank'>
-            <img src='https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg' 
-                 width='18' style='vertical-align:middle;margin-left:4px;'/>
+    <div style='text-align:center; padding-top: 2rem;'>
+        👨‍💻 Build by <b>c8geek</b>
+        <a href='https://www.linkedin.com/in/lingyu-maxwell-lai' target='_blank' title='LinkedIn'>
+            <img src='https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg'
+                 width='18' style='vertical-align:middle; margin-left:6px;'/>
         </a>
     </div>
     """,
