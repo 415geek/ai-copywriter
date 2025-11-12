@@ -372,4 +372,15 @@ if submit:
     mem_zip.seek(0)
     st.download_button("📦 下载ZIP（全量打包）", mem_zip.read(), file_name=f"{brand}_{city}_content_pack.zip")
 
-st.sidebar.caption("💡 在 .env 配置 OPENAI_API_KEY / YELP_API_KEY；无 Key 也能离线运行（模板生成）。")
+st.sidebar.markdown(
+    """
+    <div style='text-align:center;'>
+        👨‍💻 Build by <b>C8Geek</b>  
+        <a href='https://www.linkedin.com/in/lingyu-maxwell-lai' target='_blank'>
+            <img src='https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg' 
+                 width='18' style='vertical-align:middle;margin-left:4px;'/>
+        </a>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
