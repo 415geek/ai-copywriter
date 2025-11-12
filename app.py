@@ -234,7 +234,7 @@ def platform_export_row(p: str, r: Dict[str, Any]) -> Dict[str, Any]:
 
 # ==== UI ====
 st.set_page_config(page_title="AI 文案生成（批量）", page_icon="🧠", layout="wide")
-st.title("🧠 AI 文案生成 批量 & 排期")
+st.title("🧠 AI 文案生成 (批量 & 排期)")
 st.caption("最少问题 → 地区热词 → 多平台爆款文案（可批量） → 平台模板导出 → 内容排期日历")
 
 with st.sidebar:
