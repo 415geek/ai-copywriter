@@ -39,42 +39,12 @@ INDUSTRIES = [
 TONES = ["专业可信", "亲切生活化", "潮酷年轻", "高端极简", "幽默风趣"]
 LANG_CHOICES = ["中文", "英文", "中英双语"]
 
-# ========== 页面配置 ==========
-st.set_page_config(page_title="AI 文案生成（批量）", page_icon="🧠", layout="wide")
-
-# === Mobile Optimization：自动展开侧边栏 + 浮动“设置”按钮（手机端更易用） ===
-st.markdown(
-    """
-    <style>
-        /* 让折叠时也保持可见，强制展开侧栏（在移动端更易用） */
-        [data-testid="stSidebar"][aria-expanded="false"] {
-            min-width: 280px;
-            transform: translateX(0);
-        }
-        /* 顶部浮动按钮（手机端显示更明显） */
-        @media (max-width: 768px) {
-            .mobile-nav-button {
-                position: fixed;
-                top: 10px;
-                left: 10px;
-                z-index: 1000;
-                background-color: #7B61FF;
-                color: #FFFFFF;
-                border-radius: 8px;
-                padding: 6px 12px;
-                font-size: 14px;
-                font-weight: 600;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.35);
-                user-select: none;
-                -webkit-user-select: none;
-            }
-        }
-    </style>
-    <div class="mobile-nav-button" onclick="document.querySelector('[data-testid=stSidebar]').style.transform='translateX(0)';">
-        ⚙️ 设置
-    </div>
-    """,
-    unsafe_allow_html=True
+# ========== 页面配置（首次自动展开，保留官方收起/展开按钮） ==========
+st.set_page_config(
+    page_title="AI 文案生成（批量）",
+    page_icon="🧠",
+    layout="wide",
+    initial_sidebar_state="expanded"   # 首次进入自动展开
 )
 
 st.title("🧠 AI 文案生成（批量 & 排期）")
